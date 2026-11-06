@@ -4,7 +4,6 @@
   "baseBranchPatterns": ["staging"],
   "dependencyDashboard": true,
   "timezone": "Europe/Paris",
-  "schedule": ["* 0-6 * * 1"],
   "prConcurrentLimit": 5,
   "automerge": false
 }
