@@ -1,0 +1,4 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.5/schema.json",
+  "extends": ["@nlabrazi/config-biome/configs/recommended"]
+}

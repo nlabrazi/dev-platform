@@ -1,0 +1,16 @@
+{
+  "name": "@nlabrazi/config-biome",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "files": [
+    "biome-manifest.json",
+    "configs"
+  ],
+  "exports": {
+    "biome": "./biome-manifest.json"
+  },
+  "peerDependencies": {
+    "@biomejs/biome": "^2.6.0"
+  }
+}
