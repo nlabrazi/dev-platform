@@ -1,14 +1,21 @@
 {
   "name": "@nlabrazi/config-biome",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nlabrazi/dev-platform.git",
+    "directory": "packages/config-biome"
+  },
   "files": [
     "biome-manifest.json",
     "configs"
   ],
   "exports": {
     "biome": "./biome-manifest.json"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   },
   "peerDependencies": {
     "@biomejs/biome": "^2.6.0"
