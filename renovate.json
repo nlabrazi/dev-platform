@@ -1,6 +1,10 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended"
-  ]
+  "extends": ["config:recommended"],
+  "baseBranchPatterns": ["staging"],
+  "dependencyDashboard": true,
+  "timezone": "Europe/Paris",
+  "schedule": ["* 0-6 * * 1"],
+  "prConcurrentLimit": 5,
+  "automerge": false
 }
