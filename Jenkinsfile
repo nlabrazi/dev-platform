@@ -15,6 +15,26 @@ pipeline {
             }
         }
 
+        stage('Notify Renovate PR') {
+            when {
+                changeRequest target: 'staging'
+            }
+
+            steps {
+                script {
+                    if (
+                        env.CHANGE_AUTHOR == 'renovate[bot]' &&
+                        currentBuild.number == 1
+                    ) {
+                        notifyTelegram('renovate_pr', [
+                            prNumber: env.CHANGE_ID,
+                            prUrl: env.CHANGE_URL
+                        ])
+                    }
+                }
+            }
+        }
+
         stage('Install') {
             steps {
                 sh 'npm ci'
