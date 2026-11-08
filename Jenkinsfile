@@ -39,6 +39,8 @@ pipeline {
             }
 
         steps {
+          sh 'rm -f .published-package-version'
+
           withCredentials([
             string(
                 credentialsId: 'github-packages-publish',
@@ -78,9 +80,20 @@ pipeline {
                     echo "Version already published. Skipping."
                 else
                     npm publish --workspace "$PACKAGE"
+                    printf "%s" "$VERSION" > .published-package-version
                 fi
             '''
             }
+          }
+
+          script {
+              if (fileExists('.published-package-version')) {
+                  def publishedVersion = readFile('.published-package-version').trim()
+                  notifyTelegram('package_published', [
+                      packageName: '@nlabrazi/config-biome',
+                      version: publishedVersion
+                  ])
+              }
           }
         }
     }
