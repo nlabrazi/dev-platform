@@ -38,63 +38,66 @@ pipeline {
                 branch 'master'
             }
 
-        steps {
-          sh 'rm -f .published-package-version'
+            steps {
+                sh 'rm -f .published-package-version'
 
-          withCredentials([
-            string(
-                credentialsId: 'github-packages-publish',
-                variable: 'GITHUB_PACKAGES_TOKEN'
-              )
-          ]) {
-              sh '''
-                set +x
-                set -eu
+                withCredentials([
+                    string(
+                        credentialsId: 'github-packages-publish',
+                        variable: 'GITHUB_PACKAGES_TOKEN'
+                    )
+                ]) {
+                    sh '''
+                        set +x
+                        set -eu
 
-                export NPM_CONFIG_USERCONFIG="$(mktemp)"
-                VERSIONS_FILE="$(mktemp)"
+                        export NPM_CONFIG_USERCONFIG="$(mktemp)"
+                        VERSIONS_FILE="$(mktemp)"
 
-                trap 'rm -f "$NPM_CONFIG_USERCONFIG" "$VERSIONS_FILE"' EXIT
+                        trap 'rm -f "$NPM_CONFIG_USERCONFIG" "$VERSIONS_FILE"' EXIT
 
-                printf '%s\\n' \
-                  '@nlabrazi:registry=https://npm.pkg.github.com' \
-                  "//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}" \
-                  > "$NPM_CONFIG_USERCONFIG"
+                        printf '%s\\n' \
+                          '@nlabrazi:registry=https://npm.pkg.github.com' \
+                          "//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}" \
+                          > "$NPM_CONFIG_USERCONFIG"
 
-                PACKAGE='@nlabrazi/config-biome'
+                        PACKAGE='@nlabrazi/config-biome'
 
-                VERSION="$(node -p "require('./packages/config-biome/package.json').version")"
+                        VERSION="$(node -p "require('./packages/config-biome/package.json').version")"
 
-                echo "Checking ${PACKAGE}@${VERSION}"
+                        echo "Checking ${PACKAGE}@${VERSION}"
 
-                npm view "$PACKAGE" versions --json \
-                  --registry=https://npm.pkg.github.com > "$VERSIONS_FILE"
+                        npm view "$PACKAGE" versions --json \
+                          --registry=https://npm.pkg.github.com > "$VERSIONS_FILE"
 
-                if VERSIONS_FILE="$VERSIONS_FILE" VERSION="$VERSION" node -e '
-                    const fs = require("node:fs");
-                    const versions = JSON.parse(
-                        fs.readFileSync(process.env.VERSIONS_FILE, "utf8")
-                    );
-                    process.exit([versions].flat().includes(process.env.VERSION) ? 0 : 1);
-                '; then
-                    echo "Version already published. Skipping."
-                else
-                    npm publish --workspace "$PACKAGE"
-                    printf "%s" "$VERSION" > .published-package-version
-                fi
-            '''
+                        if VERSIONS_FILE="$VERSIONS_FILE" VERSION="$VERSION" node -e '
+                            const fs = require("node:fs");
+                            const versions = JSON.parse(
+                                fs.readFileSync(process.env.VERSIONS_FILE, "utf8")
+                            );
+                            process.exit([versions].flat().includes(process.env.VERSION) ? 0 : 1);
+                        '; then
+                            echo "Version already published. Skipping."
+                        else
+                            npm publish --workspace "$PACKAGE"
+                            printf "%s" "$VERSION" > .published-package-version
+                        fi
+                    '''
+                }
+
+                script {
+                    if (fileExists('.published-package-version')) {
+                        def publishedVersion = readFile(
+                            '.published-package-version'
+                        ).trim()
+
+                        notifyTelegram('package_published', [
+                            packageName: '@nlabrazi/config-biome',
+                            version: publishedVersion
+                        ])
+                    }
+                }
             }
-          }
-
-          script {
-              if (fileExists('.published-package-version')) {
-                  def publishedVersion = readFile('.published-package-version').trim()
-                  notifyTelegram('package_published', [
-                      packageName: '@nlabrazi/config-biome',
-                      version: publishedVersion
-                  ])
-              }
-          }
         }
     }
 
