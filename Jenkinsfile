@@ -38,50 +38,66 @@ pipeline {
                 branch 'master'
             }
 
-        steps {
-          withCredentials([
-            string(
-                credentialsId: 'github-packages-publish',
-                variable: 'GITHUB_PACKAGES_TOKEN'
-              )
-          ]) {
-              sh '''
-                set +x
-                set -eu
+            steps {
+                sh 'rm -f .published-package-version'
 
-                export NPM_CONFIG_USERCONFIG="$(mktemp)"
-                VERSIONS_FILE="$(mktemp)"
+                withCredentials([
+                    string(
+                        credentialsId: 'github-packages-publish',
+                        variable: 'GITHUB_PACKAGES_TOKEN'
+                    )
+                ]) {
+                    sh '''
+                        set +x
+                        set -eu
 
-                trap 'rm -f "$NPM_CONFIG_USERCONFIG" "$VERSIONS_FILE"' EXIT
+                        export NPM_CONFIG_USERCONFIG="$(mktemp)"
+                        VERSIONS_FILE="$(mktemp)"
 
-                printf '%s\\n' \
-                  '@nlabrazi:registry=https://npm.pkg.github.com' \
-                  "//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}" \
-                  > "$NPM_CONFIG_USERCONFIG"
+                        trap 'rm -f "$NPM_CONFIG_USERCONFIG" "$VERSIONS_FILE"' EXIT
 
-                PACKAGE='@nlabrazi/config-biome'
+                        printf '%s\\n' \
+                          '@nlabrazi:registry=https://npm.pkg.github.com' \
+                          "//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}" \
+                          > "$NPM_CONFIG_USERCONFIG"
 
-                VERSION="$(node -p "require('./packages/config-biome/package.json').version")"
+                        PACKAGE='@nlabrazi/config-biome'
 
-                echo "Checking ${PACKAGE}@${VERSION}"
+                        VERSION="$(node -p "require('./packages/config-biome/package.json').version")"
 
-                npm view "$PACKAGE" versions --json \
-                  --registry=https://npm.pkg.github.com > "$VERSIONS_FILE"
+                        echo "Checking ${PACKAGE}@${VERSION}"
 
-                if VERSIONS_FILE="$VERSIONS_FILE" VERSION="$VERSION" node -e '
-                    const fs = require("node:fs");
-                    const versions = JSON.parse(
-                        fs.readFileSync(process.env.VERSIONS_FILE, "utf8")
-                    );
-                    process.exit([versions].flat().includes(process.env.VERSION) ? 0 : 1);
-                '; then
-                    echo "Version already published. Skipping."
-                else
-                    npm publish --workspace "$PACKAGE"
-                fi
-            '''
+                        npm view "$PACKAGE" versions --json \
+                          --registry=https://npm.pkg.github.com > "$VERSIONS_FILE"
+
+                        if VERSIONS_FILE="$VERSIONS_FILE" VERSION="$VERSION" node -e '
+                            const fs = require("node:fs");
+                            const versions = JSON.parse(
+                                fs.readFileSync(process.env.VERSIONS_FILE, "utf8")
+                            );
+                            process.exit([versions].flat().includes(process.env.VERSION) ? 0 : 1);
+                        '; then
+                            echo "Version already published. Skipping."
+                        else
+                            npm publish --workspace "$PACKAGE"
+                            printf "%s" "$VERSION" > .published-package-version
+                        fi
+                    '''
+                }
+
+                script {
+                    if (fileExists('.published-package-version')) {
+                        def publishedVersion = readFile(
+                            '.published-package-version'
+                        ).trim()
+
+                        notifyTelegram('package_published', [
+                            packageName: '@nlabrazi/config-biome',
+                            version: publishedVersion
+                        ])
+                    }
+                }
             }
-          }
         }
     }
 
