@@ -1,0 +1,8 @@
+{
+  "extends": ["config:recommended"],
+  "baseBranchPatterns": ["staging"],
+  "dependencyDashboard": true,
+  "timezone": "Europe/Paris",
+  "prConcurrentLimit": 2,
+  "automerge": false
+}
