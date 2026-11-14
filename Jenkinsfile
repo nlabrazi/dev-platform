@@ -20,17 +20,7 @@ pipeline {
             }
 
             steps {
-                script {
-                    if (
-                        env.CHANGE_AUTHOR == 'renovate[bot]' &&
-                        currentBuild.number == 1
-                    ) {
-                        notifyTelegram('renovate_pr', [
-                            prNumber: env.CHANGE_ID,
-                            prUrl: env.CHANGE_URL
-                        ])
-                    }
-                }
+                notifyRenovatePr()
             }
         }
 
