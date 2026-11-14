@@ -1,9 +1,25 @@
 {
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
   "baseBranchPatterns": ["staging"],
   "dependencyDashboard": true,
   "timezone": "Europe/Paris",
   "prConcurrentLimit": 0,
   "prHourlyLimit": 0,
-  "automerge": false
+  "automerge": false,
+  "packageRules": [
+    {
+      "description": "Group all internal @nlabrazi dev-platform packages into a single PR",
+      "matchPackageNames": ["@nlabrazi/**"],
+      "groupName": "dev-platform packages",
+      "groupSlug": "dev-platform"
+    },
+    {
+      "description": "Group all non-major updates together to reduce PR noise",
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "excludePackageNames": ["@nlabrazi/**"],
+      "groupName": "all non-major dependencies",
+      "groupSlug": "all-minor-patch"
+    }
+  ]
 }

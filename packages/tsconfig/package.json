@@ -1,0 +1,27 @@
+{
+  "name": "@nlabrazi/tsconfig",
+  "version": "0.1.0",
+  "description": "Shared TypeScript configurations (base, Node, Nuxt) and bundled TypeScript compiler",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nlabrazi/dev-platform.git",
+    "directory": "packages/tsconfig"
+  },
+  "files": [
+    "base.json",
+    "node.json",
+    "nuxt.json"
+  ],
+  "exports": {
+    "./base.json": "./base.json",
+    "./node.json": "./node.json",
+    "./nuxt.json": "./nuxt.json"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "dependencies": {
+    "typescript": "^5.9.3"
+  }
+}

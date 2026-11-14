@@ -1,6 +1,6 @@
 {
   "name": "dev-platform",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "workspaces": [
@@ -8,5 +8,13 @@
   ],
   "engines": {
     "node": ">=26 <27"
+  },
+  "scripts": {
+    "check": "biome check .",
+    "check:write": "biome check --write .",
+    "format": "biome format --write .",
+    "lint": "biome lint .",
+    "test": "node --test tests/*.test.js",
+    "pack:check": "npm pack --workspaces --dry-run"
   }
 }
