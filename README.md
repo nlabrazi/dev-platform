@@ -53,29 +53,24 @@
 
 Dev Platform is a personal internal development platform built as an npm Workspaces monorepo. Its goal is to centralize reusable tooling, configurations and, progressively, frontend and backend packages consumed by independent applications.
 
-Instead of duplicating configuration files and maintaining different tooling conventions across repositories, applications will adopt versioned shared packages at their own pace.
+Instead of duplicating configuration files and maintaining different tooling conventions across repositories, applications adopt versioned shared packages and centralized presets from a single place.
 
-- 📦 Centralized, independently versioned packages under the `@nlabrazi` scope.
-- 🧹 Shared Biome configuration for consistent formatting, linting and import organization.
-- 🔗 npm Workspaces for local package development and linking.
-- 🔐 GitHub Packages selected as the distribution registry; initial publication is being prepared.
-- 🧪 Changes are validated before adoption by consuming applications.
-- 🛡️ Designed to complement Jenkins, Renovate and Sentinel without replacing them.
-
-**Current status:** the first package, `@nlabrazi/config-biome`, is implemented and validated locally. External publication and automated release workflows are not configured yet.
+- 📦 Centralized, independently versioned packages under the `@nlabrazi` scope with bundled tooling dependencies.
+- 🧹 `@nlabrazi/config-biome` (`0.2.0`) — Shared Biome v2 configuration (JS, TS, Vue) with bundled `@biomejs/biome`.
+- 📐 `@nlabrazi/tsconfig` (`0.1.0`) — Shared TypeScript configurations (`base.json`, `node.json`, `nuxt.json`) with bundled `typescript`.
+- 🧪 `@nlabrazi/config-vitest` (`0.1.0`) — Shared Vitest helper (`defineSharedVitestConfig`) with Nuxt/Vue aliases and bundled test runner dependencies.
+- 🎭 `@nlabrazi/config-playwright` (`0.1.0`) — Shared Playwright E2E helper (`defineSharedPlaywrightConfig`) with bundled `@playwright/test`.
+- 🔄 Centralized Renovate preset (`configs/renovate/base.json`) grouping `@nlabrazi/*` updates and non-major updates to prevent PR fatigue.
+- 🚀 Jenkins pipeline (`Jenkinsfile`) dynamically validating and publishing all workspace packages to GitHub Packages with Telegram notifications via `nabster-ci`.
 
 ---
 
 <a name="planned-features"></a>
 ## 🚀 Planned Features
 
-- 📚 Shared TypeScript, testing and Tailwind configurations.
-- 🧱 Reusable Nuxt Layer for common application conventions and features.
+- 🧱 Reusable Nuxt Layer (`@nlabrazi/nuxt-layer`) for common application conventions, Tailwind and UI foundations.
 - 🎨 A reusable Vue UI kit with customizable components (navigation, footers, cards, forms).
 - 🧰 Application starter templates consuming the same shared packages.
-- 🔄 Renovate-driven dependency maintenance across the platform and consuming repositories.
-- 🚀 Jenkins pipelines for testing, versioning and publishing packages to GitHub Packages.
-- 📊 Sentinel integration for visibility into package versions, releases and application adoption.
 - 🧩 Additional backend-oriented packages when concrete reuse cases emerge.
 
 ---
@@ -95,7 +90,7 @@ Instead of duplicating configuration files and maintaining different tooling con
 <a name="getting-started"></a>
 # ✅ Getting Started
 
-Dev Platform currently uses Node.js 26, npm Workspaces and Biome 2. The repository is a collection of shared packages, not a standalone web application or service.
+Dev Platform uses Node.js 26, npm Workspaces and Biome 2. The repository is a collection of shared packages and presets, not a standalone web application or service.
 
 <a name="installation"></a>
 ### 💻 Installation
@@ -113,13 +108,13 @@ nvm use
 npm install
 
 # List the packages recognized by npm
-npm ls --workspaces
+npm ls --workspaces --depth=0
 ```
 
 <a name="configuration"></a>
 ### 🧩 Configuration
 
-The root `package.json` declares the `packages/*` workspaces and remains private, while individual packages can be published separately.
+The root `package.json` declares the `packages/*` workspaces and remains private, while individual packages are published separately to GitHub Packages.
 
 The root `.npmrc` maps the `@nlabrazi` scope to GitHub Packages:
 
@@ -127,72 +122,119 @@ The root `.npmrc` maps the `@nlabrazi` scope to GitHub Packages:
 @nlabrazi:registry=https://npm.pkg.github.com
 ```
 
-GitHub Packages requires npm authentication for installation and publication. Keep credentials in your user-level npm configuration or CI secret store; **never commit access tokens**. Publishing is not yet automated.
+GitHub Packages requires npm authentication for installation and publication. Keep credentials in your user-level npm configuration or CI secret store (`github-packages-publish`); **never commit access tokens**.
 
 <a name="usage"></a>
 ### ▶️ Usage
 
 ```bash
 # Inspect available workspaces
-npm ls --workspaces
+npm ls --workspaces --depth=0
 
-# Check the root Biome configuration, which extends the shared package
-npx biome check biome.json
+# Check formatting and linting across the monorepo
+npm run check
 
-# Preview the contents of the shared Biome package without publishing
-npm pack --workspace @nlabrazi/config-biome --dry-run
-```
-
-The root `biome.json` consumes the shared configuration via:
-
-```json
-{
-  "$schema": "https://biomejs.dev/schemas/2.6.5/schema.json",
-  "extends": ["@nlabrazi/config-biome/configs/recommended"]
-}
+# Preview the contents of all shared packages without publishing
+npm run pack:check
 ```
 
 <a name="shared-packages"></a>
-### 📦 Shared Packages
+### 📦 Shared Packages & Presets
 
 Current workspace structure:
 
 ```text
 dev-platform/
+├── configs/
+│   └── renovate/
+│       └── base.json
 ├── packages/
-│   └── config-biome/
-│       ├── configs/
-│       │   └── recommended.json
-│       ├── biome-manifest.json
+│   ├── config-biome/
+│   │   ├── configs/
+│   │   │   └── recommended.json
+│   │   ├── biome-manifest.json
+│   │   └── package.json
+│   ├── config-playwright/
+│   │   ├── index.d.ts
+│   │   ├── index.js
+│   │   └── package.json
+│   ├── config-vitest/
+│   │   ├── index.d.ts
+│   │   ├── index.js
+│   │   └── package.json
+│   └── tsconfig/
+│       ├── base.json
+│       ├── node.json
+│       ├── nuxt.json
 │       └── package.json
+├── Jenkinsfile
 ├── biome.json
 ├── package.json
 ├── package-lock.json
+├── renovate.json
 ├── .npmrc
 └── .nvmrc
 ```
 
-#### `@nlabrazi/config-biome`
+#### 1. `@nlabrazi/config-biome` (`0.2.0`)
+Shared Biome v2 configuration with 2-space indentation, 100-character line width, single quotes, `asNeeded` semicolons, Git VCS integration, recommended lint rules, import organization, and `.vue` overrides. Bundles `@biomejs/biome`.
 
-The first package provides a shared Biome configuration with two-space indentation, a 100-character line width, recommended lint rules and import organization. It uses Biome's package configuration manifest and is currently at `0.1.0`.
+```json
+{
+  "extends": ["@nlabrazi/config-biome/configs/recommended"]
+}
+```
 
-Once published and accessible through GitHub Packages, consuming projects will be able to install a specific version rather than copy the configuration files. Each application keeps its own `package.json` and lockfile so builds remain reproducible and deployments independent.
+#### 2. `@nlabrazi/tsconfig` (`0.1.0`)
+Shared TypeScript configurations (`base.json`, `node.json`, `nuxt.json`) bundling `typescript`.
+
+```json
+{
+  "extends": "@nlabrazi/tsconfig/base.json"
+}
+```
+
+#### 3. `@nlabrazi/config-vitest` (`0.1.0`)
+Shared Vitest configuration helper with Nuxt/Vue path aliases (`~`, `@`, `~~`, `@@`, `#shared`, `#server`), standard exclusions, and bundled `vitest`, `@vitest/coverage-v8`, `@vitejs/plugin-vue`, `@vue/test-utils`, and `happy-dom`.
+
+```ts
+import { defineSharedVitestConfig } from '@nlabrazi/config-vitest'
+
+export default defineSharedVitestConfig(import.meta.url)
+```
+
+#### 4. `@nlabrazi/config-playwright` (`0.1.0`)
+Shared Playwright configuration helper with unified local dev server vs CI behavior, optional mobile viewports (`mobile: true`), and bundled `@playwright/test`.
+
+```ts
+import { defineSharedPlaywrightConfig } from '@nlabrazi/config-playwright'
+
+export default defineSharedPlaywrightConfig({ port: 3000 })
+```
+
+#### 5. Renovate Base Preset (`configs/renovate/base.json`)
+Centralized Renovate preset targeting `staging`, grouping `@nlabrazi/*` updates into a single PR, and grouping non-major updates together.
+
+```json
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["github>nlabrazi/dev-platform//configs/renovate/base"]
+}
+```
 
 <a name="tests"></a>
 ### 🧪 Tests
 
 ```bash
-# Validate the shared configuration used at the repository root
-npx biome check biome.json
+# Validate formatting and linting across the repository
+npm run check
 
-# Check package contents prior to publication
-npm pack --workspace @nlabrazi/config-biome --dry-run
+# Check all workspace package tarballs prior to publication
+npm run pack:check
 
 # Inspect the workspace dependency graph
-npm ls --workspaces
+npm ls --workspaces --depth=0
 ```
-
-These commands validate the current initial package. Automated unit tests and Jenkins pipelines will be introduced as the platform grows.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

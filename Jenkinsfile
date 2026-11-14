@@ -1,4 +1,3 @@
-
 @Library('nabster-ci') _
 
 pipeline {
@@ -21,17 +20,7 @@ pipeline {
             }
 
             steps {
-                script {
-                    if (
-                        env.CHANGE_AUTHOR == 'renovate[bot]' &&
-                        currentBuild.number == 1
-                    ) {
-                        notifyTelegram('renovate_pr', [
-                            prNumber: env.CHANGE_ID,
-                            prUrl: env.CHANGE_URL
-                        ])
-                    }
-                }
+                notifyRenovatePr()
             }
         }
 
@@ -43,23 +32,29 @@ pipeline {
 
         stage('Validate Biome config') {
             steps {
-                sh 'npx biome check biome.json'
+                sh 'npm run check'
             }
         }
 
-        stage('Validate package') {
+        stage('Unit tests') {
             steps {
-                sh 'npm pack --workspace @nlabrazi/config-biome --dry-run'
+                sh 'npm test'
             }
         }
 
-        stage('Publish package') {
+        stage('Validate packages') {
+            steps {
+                sh 'npm run pack:check'
+            }
+        }
+
+        stage('Publish packages') {
             when {
                 branch 'master'
             }
 
             steps {
-                sh 'rm -f .published-package-version'
+                sh 'rm -f .published-packages'
 
                 withCredentials([
                     string(
@@ -81,40 +76,51 @@ pipeline {
                           "//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}" \
                           > "$NPM_CONFIG_USERCONFIG"
 
-                        PACKAGE='@nlabrazi/config-biome'
+                        for pkg_json in packages/*/package.json; do
+                            PACKAGE="$(node -p "require('./${pkg_json}').name")"
+                            VERSION="$(node -p "require('./${pkg_json}').version")"
 
-                        VERSION="$(node -p "require('./packages/config-biome/package.json').version")"
+                            echo "Checking ${PACKAGE}@${VERSION}"
 
-                        echo "Checking ${PACKAGE}@${VERSION}"
+                            if ! npm view "$PACKAGE" versions --json \
+                              --registry=https://npm.pkg.github.com > "$VERSIONS_FILE" 2>/dev/null; then
+                                printf '[]' > "$VERSIONS_FILE"
+                            fi
 
-                        npm view "$PACKAGE" versions --json \
-                          --registry=https://npm.pkg.github.com > "$VERSIONS_FILE"
-
-                        if VERSIONS_FILE="$VERSIONS_FILE" VERSION="$VERSION" node -e '
-                            const fs = require("node:fs");
-                            const versions = JSON.parse(
-                                fs.readFileSync(process.env.VERSIONS_FILE, "utf8")
-                            );
-                            process.exit([versions].flat().includes(process.env.VERSION) ? 0 : 1);
-                        '; then
-                            echo "Version already published. Skipping."
-                        else
-                            npm publish --workspace "$PACKAGE"
-                            printf "%s" "$VERSION" > .published-package-version
-                        fi
+                            if VERSIONS_FILE="$VERSIONS_FILE" VERSION="$VERSION" node -e '
+                                const fs = require("node:fs");
+                                let versions = [];
+                                try {
+                                    versions = JSON.parse(
+                                        fs.readFileSync(process.env.VERSIONS_FILE, "utf8")
+                                    );
+                                } catch {
+                                    versions = [];
+                                }
+                                process.exit([versions].flat().includes(process.env.VERSION) ? 0 : 1);
+                            '; then
+                                echo "${PACKAGE}@${VERSION} already published. Skipping."
+                            else
+                                npm publish --workspace "$PACKAGE"
+                                printf "%s %s\\n" "$PACKAGE" "$VERSION" >> .published-packages
+                            fi
+                        done
                     '''
                 }
 
                 script {
-                    if (fileExists('.published-package-version')) {
-                        def publishedVersion = readFile(
-                            '.published-package-version'
-                        ).trim()
-
-                        notifyTelegram('package_published', [
-                            packageName: '@nlabrazi/config-biome',
-                            version: publishedVersion
-                        ])
+                    if (fileExists('.published-packages')) {
+                        def lines = readFile('.published-packages').trim().split('\n')
+                        for (String line : lines) {
+                            def trimmed = line.trim()
+                            if (trimmed) {
+                                def parts = trimmed.split(' ')
+                                notifyTelegram('package_published', [
+                                    packageName: parts[0],
+                                    version: parts[1]
+                                ])
+                            }
+                        }
                     }
                 }
             }

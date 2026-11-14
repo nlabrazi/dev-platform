@@ -1,0 +1,29 @@
+{
+  "name": "@nlabrazi/config-playwright",
+  "version": "0.1.0",
+  "description": "Shared Playwright E2E configuration helper and bundled Playwright test runner",
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nlabrazi/dev-platform.git",
+    "directory": "packages/config-playwright"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts"
+  ],
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}

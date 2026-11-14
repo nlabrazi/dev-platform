@@ -1,6 +1,7 @@
 {
   "name": "@nlabrazi/config-biome",
-  "version": "0.1.2",
+  "version": "0.2.0",
+  "description": "Shared Biome configuration (JS, TS, Vue) and bundled Biome CLI",
   "type": "module",
   "repository": {
     "type": "git",
@@ -12,12 +13,15 @@
     "configs"
   ],
   "exports": {
+    ".": "./configs/recommended.json",
+    "./configs/recommended": "./configs/recommended.json",
+    "./configs/recommended.json": "./configs/recommended.json",
     "biome": "./biome-manifest.json"
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
-  "peerDependencies": {
-    "@biomejs/biome": "^2.6.0"
+  "dependencies": {
+    "@biomejs/biome": "^2.6.5"
   }
 }

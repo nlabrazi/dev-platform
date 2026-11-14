@@ -1,0 +1,33 @@
+{
+  "name": "@nlabrazi/config-vitest",
+  "version": "0.1.0",
+  "description": "Shared Vitest configuration helper with Nuxt/Vue aliases and bundled test runner dependencies",
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nlabrazi/dev-platform.git",
+    "directory": "packages/config-vitest"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts"
+  ],
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "dependencies": {
+    "@vitejs/plugin-vue": "^6.0.5",
+    "@vitest/coverage-v8": "^4.1.11",
+    "@vue/test-utils": "^2.4.10",
+    "happy-dom": "^20.9.0",
+    "vitest": "^4.1.11"
+  }
+}
