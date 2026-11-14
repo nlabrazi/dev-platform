@@ -56,6 +56,8 @@ test('Renovate base preset defines @nlabrazi grouping and staging base branch', 
   const preset = JSON.parse(fs.readFileSync(presetPath, 'utf8'))
 
   assert.deepEqual(preset.baseBranchPatterns, ['staging'])
+  assert.equal(preset.dependencyDashboard, true)
+  assert.equal(preset.dependencyDashboardApproval, true)
   assert.equal(preset.automerge, false)
   assert.ok(Array.isArray(preset.packageRules))
   assert.ok(preset.packageRules.some((rule) => rule.matchPackageNames?.includes('@nlabrazi/**')))
