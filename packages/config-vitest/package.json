@@ -25,9 +25,9 @@
   },
   "dependencies": {
     "@vitejs/plugin-vue": "^6.0.5",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^5.1.0",
     "@vue/test-utils": "^2.6.0",
-    "happy-dom": "^20.9.0",
-    "vitest": "^4.1.11"
+    "happy-dom": "^21.0.4",
+    "vitest": "^5.1.0"
   }
 }
