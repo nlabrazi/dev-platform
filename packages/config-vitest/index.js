@@ -42,6 +42,12 @@ export function defineSharedVitestConfig(optionsOrRoot = {}) {
   const enableVuePlugin = options.vue ?? options.environment === 'happy-dom'
   const plugins = [...(enableVuePlugin ? [vue()] : []), ...(options.plugins ?? [])]
 
+  const { coverage: testCoverage, ...otherTestOptions } = options.test ?? {}
+  const coverageOptions = {
+    ...(options.coverage ?? {}),
+    ...(testCoverage ?? {}),
+  }
+
   return defineConfig({
     plugins,
     resolve: {
@@ -63,7 +69,13 @@ export function defineSharedVitestConfig(optionsOrRoot = {}) {
       ...(options.include ? { include: options.include } : {}),
       exclude: [...DEFAULT_EXCLUDES, ...(options.exclude ?? [])],
       ...(options.setupFiles ? { setupFiles: options.setupFiles } : {}),
-      ...(options.test ?? {}),
+      coverage: {
+        provider: 'v8',
+        reporter: ['text', 'html', 'lcov'],
+        reportsDirectory: 'coverage',
+        ...coverageOptions,
+      },
+      ...otherTestOptions,
     },
   })
 }
