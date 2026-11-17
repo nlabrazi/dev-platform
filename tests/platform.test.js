@@ -40,6 +40,17 @@ test('@nlabrazi/config-vitest builds Nuxt/Vue aliases and exclusions', () => {
   assert.equal(config.resolve?.alias?.['#shared'], '/tmp/sample-app/shared')
   assert.equal(config.test?.environment, 'happy-dom')
   assert.ok(config.test?.exclude?.includes('tests/e2e/**'))
+  assert.equal(config.test?.coverage?.provider, 'v8')
+  assert.deepEqual(config.test?.coverage?.reporter, ['text', 'html', 'lcov'])
+  assert.equal(config.test?.coverage?.reportsDirectory, 'coverage')
+
+  const customConfig = defineSharedVitestConfig({
+    coverage: {
+      reportsDirectory: 'custom-coverage',
+    },
+  })
+  assert.equal(customConfig.test?.coverage?.provider, 'v8')
+  assert.equal(customConfig.test?.coverage?.reportsDirectory, 'custom-coverage')
 })
 
 test('@nlabrazi/config-playwright configures desktop and optional mobile projects', () => {

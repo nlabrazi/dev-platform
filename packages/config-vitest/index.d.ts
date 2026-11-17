@@ -12,6 +12,7 @@ export interface SharedVitestOptions {
   setupFiles?: string | string[]
   plugins?: unknown[]
   test?: Record<string, unknown>
+  coverage?: Record<string, unknown>
 }
 
 export declare function defineSharedVitestConfig(
