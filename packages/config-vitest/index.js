@@ -66,9 +66,17 @@ export function defineSharedVitestConfig(optionsOrRoot = {}) {
   const plugins = [...(enableVuePlugin ? [vue()] : []), ...(options.plugins ?? [])]
 
   const { coverage: testCoverage, ...otherTestOptions } = options.test ?? {}
+  const thresholds =
+    options.coverage?.thresholds || testCoverage?.thresholds
+      ? {
+          ...(options.coverage?.thresholds ?? {}),
+          ...(testCoverage?.thresholds ?? {}),
+        }
+      : undefined
   const coverage = createSharedCoverageConfig({
     ...(options.coverage ?? {}),
     ...(testCoverage ?? {}),
+    ...(thresholds ? { thresholds } : {}),
     exclude: [...(options.coverage?.exclude ?? []), ...(testCoverage?.exclude ?? [])],
   })
 

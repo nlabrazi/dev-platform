@@ -74,10 +74,28 @@ test('@nlabrazi/config-vitest builds Nuxt/Vue aliases and exclusions', () => {
   const scopedCoverage = createSharedCoverageConfig({
     include: ['src/**'],
     exclude: ['**/*.css', '**/generated/**'],
+    thresholds: { lines: 80 },
   })
   assert.deepEqual(scopedCoverage.include, ['src/**'])
   assert.equal(scopedCoverage.exclude.filter((item) => item === '**/*.css').length, 1)
   assert.ok(scopedCoverage.exclude.includes('**/generated/**'))
+  assert.deepEqual(scopedCoverage.thresholds, { lines: 80 })
+
+  const mergedThresholds = defineSharedVitestConfig({
+    coverage: { thresholds: { lines: 80, branches: 70 } },
+    test: { coverage: { thresholds: { lines: 85 } } },
+  })
+  assert.deepEqual(mergedThresholds.test?.coverage?.thresholds, { lines: 85, branches: 70 })
+
+  const topThresholdsOnly = defineSharedVitestConfig({
+    coverage: { thresholds: { lines: 75 } },
+  })
+  assert.deepEqual(topThresholdsOnly.test?.coverage?.thresholds, { lines: 75 })
+
+  const testThresholdsOnly = defineSharedVitestConfig({
+    test: { coverage: { thresholds: { functions: 70 } } },
+  })
+  assert.deepEqual(testThresholdsOnly.test?.coverage?.thresholds, { functions: 70 })
 })
 
 test('@nlabrazi/config-vitest handles file URLs, directories and custom test options', () => {
