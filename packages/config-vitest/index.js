@@ -13,6 +13,17 @@ const DEFAULT_EXCLUDES = [
   'e2e/**',
 ]
 
+const DEFAULT_COVERAGE_EXCLUDES = [
+  ...DEFAULT_EXCLUDES,
+  '**/*.css',
+  '**/*.scss',
+  '**/*.d.ts',
+  '**/*.config.*',
+  '**/tests/**',
+  '**/__tests__/**',
+  '**/*.{test,spec}.*',
+]
+
 function resolveRootDir(input) {
   if (!input) {
     return process.cwd()
@@ -43,10 +54,17 @@ export function defineSharedVitestConfig(optionsOrRoot = {}) {
   const plugins = [...(enableVuePlugin ? [vue()] : []), ...(options.plugins ?? [])]
 
   const { coverage: testCoverage, ...otherTestOptions } = options.test ?? {}
-  const coverageOptions = {
+  const { exclude: _coverageExclude, ...otherCoverageOptions } = {
     ...(options.coverage ?? {}),
     ...(testCoverage ?? {}),
   }
+  const coverageExclude = [
+    ...new Set([
+      ...DEFAULT_COVERAGE_EXCLUDES,
+      ...(options.coverage?.exclude ?? []),
+      ...(testCoverage?.exclude ?? []),
+    ]),
+  ]
 
   return defineConfig({
     plugins,
@@ -73,7 +91,8 @@ export function defineSharedVitestConfig(optionsOrRoot = {}) {
         provider: 'v8',
         reporter: ['text', 'html', 'lcov'],
         reportsDirectory: 'coverage',
-        ...coverageOptions,
+        ...otherCoverageOptions,
+        exclude: coverageExclude,
       },
       ...otherTestOptions,
     },
