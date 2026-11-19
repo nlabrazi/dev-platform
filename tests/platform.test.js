@@ -4,7 +4,12 @@ import path from 'node:path'
 import test from 'node:test'
 import { fileURLToPath } from 'node:url'
 import { defineSharedPlaywrightConfig } from '@nlabrazi/config-playwright'
-import { defineSharedVitestConfig } from '@nlabrazi/config-vitest'
+import {
+  createSharedCoverageConfig,
+  DEFAULT_COVERAGE_EXCLUDES,
+  DEFAULT_EXCLUDES,
+  defineSharedVitestConfig,
+} from '@nlabrazi/config-vitest'
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -58,6 +63,21 @@ test('@nlabrazi/config-vitest builds Nuxt/Vue aliases and exclusions', () => {
   assert.equal(customConfig.test?.coverage?.reportsDirectory, 'custom-coverage')
   assert.ok(customConfig.test?.coverage?.exclude?.includes('**/*.css'))
   assert.ok(customConfig.test?.coverage?.exclude?.includes('**/generated/**'))
+
+  const standaloneCoverage = createSharedCoverageConfig()
+  assert.equal(standaloneCoverage.provider, 'v8')
+  assert.deepEqual(standaloneCoverage.reporter, ['text', 'html', 'lcov'])
+  assert.equal(standaloneCoverage.reportsDirectory, 'coverage')
+  assert.deepEqual(standaloneCoverage.exclude, DEFAULT_COVERAGE_EXCLUDES)
+  assert.ok(DEFAULT_EXCLUDES.includes('tests/e2e/**'))
+
+  const scopedCoverage = createSharedCoverageConfig({
+    include: ['src/**'],
+    exclude: ['**/*.css', '**/generated/**'],
+  })
+  assert.deepEqual(scopedCoverage.include, ['src/**'])
+  assert.equal(scopedCoverage.exclude.filter((item) => item === '**/*.css').length, 1)
+  assert.ok(scopedCoverage.exclude.includes('**/generated/**'))
 })
 
 test('@nlabrazi/config-vitest handles file URLs, directories and custom test options', () => {

@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vitest/config'
 
-const DEFAULT_EXCLUDES = [
+export const DEFAULT_EXCLUDES = [
   '**/node_modules/**',
   '**/.nuxt/**',
   '**/.output/**',
@@ -13,7 +13,7 @@ const DEFAULT_EXCLUDES = [
   'e2e/**',
 ]
 
-const DEFAULT_COVERAGE_EXCLUDES = [
+export const DEFAULT_COVERAGE_EXCLUDES = [
   ...DEFAULT_EXCLUDES,
   '**/*.css',
   '**/*.scss',
@@ -23,6 +23,18 @@ const DEFAULT_COVERAGE_EXCLUDES = [
   '**/__tests__/**',
   '**/*.{test,spec}.*',
 ]
+
+export function createSharedCoverageConfig(options = {}) {
+  const { exclude = [], ...rest } = options
+
+  return {
+    provider: 'v8',
+    reporter: ['text', 'html', 'lcov'],
+    reportsDirectory: 'coverage',
+    ...rest,
+    exclude: [...new Set([...DEFAULT_COVERAGE_EXCLUDES, ...exclude])],
+  }
+}
 
 function resolveRootDir(input) {
   if (!input) {
@@ -54,17 +66,11 @@ export function defineSharedVitestConfig(optionsOrRoot = {}) {
   const plugins = [...(enableVuePlugin ? [vue()] : []), ...(options.plugins ?? [])]
 
   const { coverage: testCoverage, ...otherTestOptions } = options.test ?? {}
-  const { exclude: _coverageExclude, ...otherCoverageOptions } = {
+  const coverage = createSharedCoverageConfig({
     ...(options.coverage ?? {}),
     ...(testCoverage ?? {}),
-  }
-  const coverageExclude = [
-    ...new Set([
-      ...DEFAULT_COVERAGE_EXCLUDES,
-      ...(options.coverage?.exclude ?? []),
-      ...(testCoverage?.exclude ?? []),
-    ]),
-  ]
+    exclude: [...(options.coverage?.exclude ?? []), ...(testCoverage?.exclude ?? [])],
+  })
 
   return defineConfig({
     plugins,
@@ -87,13 +93,7 @@ export function defineSharedVitestConfig(optionsOrRoot = {}) {
       ...(options.include ? { include: options.include } : {}),
       exclude: [...DEFAULT_EXCLUDES, ...(options.exclude ?? [])],
       ...(options.setupFiles ? { setupFiles: options.setupFiles } : {}),
-      coverage: {
-        provider: 'v8',
-        reporter: ['text', 'html', 'lcov'],
-        reportsDirectory: 'coverage',
-        ...otherCoverageOptions,
-        exclude: coverageExclude,
-      },
+      coverage,
       ...otherTestOptions,
     },
   })
