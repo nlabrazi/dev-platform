@@ -242,7 +242,7 @@ test('@nlabrazi/config-playwright handles CI, external URLs, fallbacks and overr
   }
 })
 
-test('Renovate base preset defines @nlabrazi grouping and staging base branch', () => {
+test('Renovate base preset defines @nlabrazi grouping, central npmrc, and staging base branch', () => {
   const presetPath = path.join(rootDir, 'configs/renovate/base.json')
   const preset = JSON.parse(fs.readFileSync(presetPath, 'utf8'))
 
@@ -250,6 +250,11 @@ test('Renovate base preset defines @nlabrazi grouping and staging base branch', 
   assert.equal(preset.dependencyDashboard, true)
   assert.equal(preset.dependencyDashboardApproval, true)
   assert.equal(preset.automerge, false)
+  assert.equal(preset.npmrc, '@nlabrazi:registry=https://npm.pkg.github.com/')
   assert.ok(Array.isArray(preset.packageRules))
   assert.ok(preset.packageRules.some((rule) => rule.matchPackageNames?.includes('@nlabrazi/**')))
+
+  const repoRenovatePath = path.join(rootDir, 'renovate.json')
+  const repoRenovate = JSON.parse(fs.readFileSync(repoRenovatePath, 'utf8'))
+  assert.equal(repoRenovate.rangeStrategy, 'bump')
 })

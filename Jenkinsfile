@@ -91,8 +91,36 @@ pipeline {
                             '; then
                                 echo "${PACKAGE}@${VERSION} already published. Skipping."
                             else
+                                PREV_AND_BUMP="$(VERSIONS_FILE="$VERSIONS_FILE" VERSION="$VERSION" node -e '
+                                    const fs = require("node:fs");
+                                    const parse = (v) => {
+                                        const m = String(v || "").match(/^(\d+)\.(\d+)\.(\d+)$/);
+                                        return m ? [+m[1], +m[2], +m[3]] : null;
+                                    };
+                                    const cmp = (a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+                                    let versions = [];
+                                    try {
+                                        versions = [JSON.parse(fs.readFileSync(process.env.VERSIONS_FILE, "utf8"))].flat();
+                                    } catch {}
+                                    const target = parse(process.env.VERSION);
+                                    const older = versions
+                                        .map((v) => ({ raw: String(v), parts: parse(v) }))
+                                        .filter((x) => x.parts && (!target || cmp(x.parts, target) < 0))
+                                        .sort((a, b) => cmp(a.parts, b.parts));
+                                    const prev = older.length ? older[older.length - 1] : null;
+                                    if (!prev || !target) {
+                                        process.stdout.write(`${process.env.VERSION} (INITIAL)`);
+                                        process.exit(0);
+                                    }
+                                    const bump = target[0] > prev.parts[0]
+                                        ? "MAJOR"
+                                        : target[1] > prev.parts[1]
+                                            ? "MINOR"
+                                            : "PATCH";
+                                    process.stdout.write(`${prev.raw} -> ${process.env.VERSION} (${bump})`);
+                                ')"
                                 npm publish --workspace "$PACKAGE"
-                                printf "%s %s\\n" "$PACKAGE" "$VERSION" >> .published-packages
+                                printf "%s|%s\\n" "$PACKAGE" "$PREV_AND_BUMP" >> .published-packages
                             fi
                         done
                     '''
@@ -104,10 +132,10 @@ pipeline {
                         for (String line : lines) {
                             def trimmed = line.trim()
                             if (trimmed) {
-                                def parts = trimmed.split(' ')
+                                def parts = trimmed.split('\\|', 2)
                                 notifyTelegram('package_published', [
                                     packageName: parts[0],
-                                    version: parts[1]
+                                    version: parts.length > 1 ? parts[1] : 'unknown'
                                 ])
                             }
                         }
