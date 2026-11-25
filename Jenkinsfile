@@ -94,7 +94,7 @@ pipeline {
                                 PREV_AND_BUMP="$(VERSIONS_FILE="$VERSIONS_FILE" VERSION="$VERSION" node -e '
                                     const fs = require("node:fs");
                                     const parse = (v) => {
-                                        const m = String(v || "").match(/^(\d+)\.(\d+)\.(\d+)$/);
+                                        const m = String(v || "").match(/^([0-9]+)[.]([0-9]+)[.]([0-9]+)$/);
                                         return m ? [+m[1], +m[2], +m[3]] : null;
                                     };
                                     const cmp = (a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
