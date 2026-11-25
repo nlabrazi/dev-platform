@@ -258,3 +258,47 @@ test('Renovate base preset defines @nlabrazi grouping, central npmrc, and stagin
   const repoRenovate = JSON.parse(fs.readFileSync(repoRenovatePath, 'utf8'))
   assert.equal(repoRenovate.rangeStrategy, 'bump')
 })
+
+test('Renovate automerge preset uses branch automerge with cooldown and manual guards', () => {
+  const presetPath = path.join(rootDir, 'configs/renovate/automerge.json')
+  const preset = JSON.parse(fs.readFileSync(presetPath, 'utf8'))
+
+  assert.equal(preset.dependencyDashboard, true)
+  assert.equal(preset.dependencyDashboardApproval, true)
+  assert.equal(preset.automerge, false)
+  assert.equal(preset.platformAutomerge, false)
+  assert.deepEqual(preset.schedule, ['before 6am on monday'])
+  assert.deepEqual(preset.automergeSchedule, ['at any time'])
+  assert.equal(preset.internalChecksFilter, 'strict')
+  assert.equal(preset.prCreation, 'not-pending')
+  assert.ok(Array.isArray(preset.packageRules))
+
+  const nlabraziRule = preset.packageRules.find((r) =>
+    r.matchPackageNames?.includes('@nlabrazi/**'),
+  )
+  assert.equal(nlabraziRule?.automerge, true)
+  assert.equal(nlabraziRule?.automergeType, 'branch')
+  assert.equal(nlabraziRule?.dependencyDashboardApproval, false)
+  assert.equal(nlabraziRule?.minimumReleaseAge, '0 days')
+  assert.ok(nlabraziRule?.excludePackageNames?.includes('@nlabrazi/config-playwright'))
+
+  const patchRule = preset.packageRules.find(
+    (r) => r.matchUpdateTypes?.length === 1 && r.matchUpdateTypes[0] === 'patch',
+  )
+  assert.equal(patchRule?.automerge, true)
+  assert.equal(patchRule?.automergeType, 'branch')
+  assert.equal(patchRule?.minimumReleaseAge, '3 days')
+
+  const minorRule = preset.packageRules.find(
+    (r) => r.matchUpdateTypes?.includes('minor') && r.automerge === true && !r.matchPackageNames,
+  )
+  assert.equal(minorRule?.automergeType, 'branch')
+  assert.equal(minorRule?.minimumReleaseAge, '3 days')
+  assert.ok(minorRule?.matchCurrentVersion?.startsWith('!'))
+
+  const guardRules = preset.packageRules.filter((r) => r.automerge === false)
+  assert.ok(guardRules.some((r) => r.matchUpdateTypes?.includes('major')))
+  assert.ok(guardRules.some((r) => r.matchManagers?.includes('dockerfile')))
+  assert.ok(guardRules.some((r) => r.matchPackageNames?.includes('/playwright/')))
+  assert.ok(guardRules.every((r) => r.dependencyDashboardApproval === true && r.groupName === null))
+})

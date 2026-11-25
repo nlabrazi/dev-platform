@@ -1,0 +1,84 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "dependencyDashboard": true,
+  "dependencyDashboardApproval": true,
+  "automerge": false,
+  "platformAutomerge": false,
+  "schedule": ["before 6am on monday"],
+  "automergeSchedule": ["at any time"],
+  "internalChecksFilter": "strict",
+  "prCreation": "not-pending",
+  "packageRules": [
+    {
+      "description": "Automerge safe internal @nlabrazi non-major updates directly into staging (no PR unless CI fails)",
+      "matchPackageNames": ["@nlabrazi/**"],
+      "excludePackageNames": ["@nlabrazi/config-playwright"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "minimumReleaseAge": "0 days",
+      "dependencyDashboardApproval": false,
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "description": "Automerge safe third-party patch updates (including 0.x) after a 3-day cooldown",
+      "matchUpdateTypes": ["patch"],
+      "excludePackageNames": ["@nlabrazi/**"],
+      "minimumReleaseAge": "3 days",
+      "dependencyDashboardApproval": false,
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "description": "Automerge safe third-party minor updates (>= 1.0.0) after a 3-day cooldown",
+      "matchUpdateTypes": ["minor"],
+      "matchCurrentVersion": "!/^[~^]?v?0\\./",
+      "excludePackageNames": ["@nlabrazi/**"],
+      "minimumReleaseAge": "3 days",
+      "dependencyDashboardApproval": false,
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "description": "Keep third-party 0.x minor updates manual and outside the automerge group",
+      "matchUpdateTypes": ["minor"],
+      "matchCurrentVersion": "/^[~^]?v?0\\./",
+      "excludePackageNames": ["@nlabrazi/**"],
+      "groupName": null,
+      "groupSlug": null,
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    },
+    {
+      "description": "Keep major, pin, and digest updates manual and outside any automerge group",
+      "matchUpdateTypes": ["major", "pin", "digest"],
+      "groupName": null,
+      "groupSlug": null,
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    },
+    {
+      "description": "Keep Docker images and runtime managers manual and outside the automerge group",
+      "matchManagers": ["dockerfile", "docker-compose", "nvm", "nodenv", "pyenv"],
+      "groupName": null,
+      "groupSlug": null,
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    },
+    {
+      "description": "Keep Docker and runtime datasources manual and outside the automerge group",
+      "matchDatasources": ["docker", "node-version", "python-version"],
+      "groupName": null,
+      "groupSlug": null,
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    },
+    {
+      "description": "Keep Playwright and core runtime packages manual (must stay aligned with CI images)",
+      "matchPackageNames": ["/playwright/", "node", "python", "postgres"],
+      "groupName": null,
+      "groupSlug": null,
+      "dependencyDashboardApproval": true,
+      "automerge": false
+    }
+  ]
+}
