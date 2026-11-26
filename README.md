@@ -58,9 +58,10 @@ Instead of duplicating configuration files and maintaining different tooling con
 - 📦 Centralized, independently versioned packages under the `@nlabrazi` scope with bundled tooling dependencies.
 - 🧹 `@nlabrazi/config-biome` (`0.2.0`) — Shared Biome v2 configuration (JS, TS, Vue) with bundled `@biomejs/biome`.
 - 📐 `@nlabrazi/tsconfig` (`0.1.0`) — Shared TypeScript configurations (`base.json`, `node.json`, `nuxt.json`) with bundled `typescript`.
-- 🧪 `@nlabrazi/config-vitest` (`0.1.0`) — Shared Vitest helper (`defineSharedVitestConfig`) with Nuxt/Vue aliases and bundled test runner dependencies.
+- 🧪 `@nlabrazi/config-vitest` (`0.2.4`) — Shared Vitest helper (`defineSharedVitestConfig`) with Nuxt/Vue aliases and bundled test runner dependencies.
 - 🎭 `@nlabrazi/config-playwright` (`0.1.0`) — Shared Playwright E2E helper (`defineSharedPlaywrightConfig`) with bundled `@playwright/test`.
-- 🔄 Centralized Renovate preset (`configs/renovate/base.json`) grouping `@nlabrazi/*` updates and non-major updates to prevent PR fatigue.
+- 🧱 `@nlabrazi/nuxt-layer` (`0.1.0`) — Headless Nuxt 4 layer providing environment-aware Umami analytics (`useUmami`), standardized `GET /api/health`, and `useSiteSeo`.
+- 🔄 Centralized Renovate presets (`configs/renovate/base.json` and opt-in `configs/renovate/automerge.json`) targeting `staging`.
 - 🚀 Jenkins pipeline (`Jenkinsfile`) dynamically validating and publishing all workspace packages to GitHub Packages with Telegram notifications via `nabster-ci`.
 
 ---
@@ -68,8 +69,7 @@ Instead of duplicating configuration files and maintaining different tooling con
 <a name="planned-features"></a>
 ## 🚀 Planned Features
 
-- 🧱 Reusable Nuxt Layer (`@nlabrazi/nuxt-layer`) for common application conventions, Tailwind and UI foundations.
-- 🎨 A reusable Vue UI kit with customizable components (navigation, footers, cards, forms).
+- 🎨 Dedicated `@nlabrazi/nuxt-ui-layer` (extending `@nlabrazi/nuxt-layer`) for shared Tailwind v4 / `@nuxt/ui` components (navigation, footers, cards, forms).
 - 🧰 Application starter templates consuming the same shared packages.
 - 🧩 Additional backend-oriented packages when concrete reuse cases emerge.
 
@@ -162,6 +162,16 @@ dev-platform/
 │   │   ├── index.d.ts
 │   │   ├── index.js
 │   │   └── package.json
+│   ├── nuxt-layer/
+│   │   ├── app/
+│   │   │   ├── composables/
+│   │   │   └── plugins/
+│   │   ├── server/
+│   │   │   └── api/
+│   │   ├── shared/
+│   │   │   └── utils/
+│   │   ├── nuxt.config.ts
+│   │   └── package.json
 │   └── tsconfig/
 │       ├── base.json
 │       ├── node.json
@@ -212,7 +222,25 @@ import { defineSharedPlaywrightConfig } from '@nlabrazi/config-playwright'
 export default defineSharedPlaywrightConfig({ port: 3000 })
 ```
 
-#### 5. Renovate Base Preset (`configs/renovate/base.json`)
+#### 5. `@nlabrazi/nuxt-layer` (`0.1.0`)
+Shared headless Nuxt 4 layer with zero runtime dependencies (`peerDependencies: { "nuxt": ">=4.0.0" }`). Provides environment-aware Umami analytics (`useUmami`), standardized `GET /api/health`, and `useSiteSeo`.
+
+```ts
+export default defineNuxtConfig({
+  extends: ['@nlabrazi/nuxt-layer'],
+  runtimeConfig: {
+    public: {
+      umami: {
+        websiteId: '...',
+        domains: 'app.nabster.dev',
+        excludePaths: ['/internal/**'],
+      },
+    },
+  },
+})
+```
+
+#### 6. Renovate Presets (`configs/renovate/base.json`, `automerge.json`)
 Centralized Renovate preset targeting `staging`, grouping `@nlabrazi/*` updates into a single PR, and grouping non-major updates together.
 
 ```json
