@@ -1,4 +1,5 @@
 import { computed } from 'vue'
+import { useRequestURL, useRoute, useRuntimeConfig } from '#imports'
 import { shouldLoadUmami, type UmamiLayerConfig } from '../../shared/utils/umami'
 
 export type UmamiEventData = Record<string, string | number | boolean | null | undefined>

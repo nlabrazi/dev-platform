@@ -1,3 +1,4 @@
+import { useHead, useRuntimeConfig, useSeoMeta } from '#imports'
 import {
   buildSiteSeoPayload,
   type SiteSeoDefaults,
