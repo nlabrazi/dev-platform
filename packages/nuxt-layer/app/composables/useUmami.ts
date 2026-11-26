@@ -1,3 +1,4 @@
+import { useRequestURL, useRoute, useRuntimeConfig } from '#imports'
 import { computed } from 'vue'
 import { useRequestURL, useRoute, useRuntimeConfig } from '#imports'
 import { shouldLoadUmami, type UmamiLayerConfig } from '../../shared/utils/umami'
