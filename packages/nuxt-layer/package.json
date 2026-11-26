@@ -1,0 +1,35 @@
+{
+  "name": "@nlabrazi/nuxt-layer",
+  "version": "0.1.0",
+  "description": "Shared headless Nuxt 4 layer with Umami analytics, /api/health endpoint, and SEO helper",
+  "type": "module",
+  "main": "./nuxt.config.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nlabrazi/dev-platform.git",
+    "directory": "packages/nuxt-layer"
+  },
+  "files": [
+    "app",
+    "server",
+    "shared",
+    "nuxt.config.ts"
+  ],
+  "exports": {
+    ".": "./nuxt.config.ts",
+    "./umami": "./shared/utils/umami.ts",
+    "./health": "./shared/utils/health.ts",
+    "./seo": "./shared/utils/seo.ts"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "peerDependencies": {
+    "nuxt": ">=4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "nuxt": {
+      "optional": true
+    }
+  }
+}
